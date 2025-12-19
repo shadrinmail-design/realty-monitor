@@ -1,0 +1,155 @@
+#!/usr/bin/env python3
+"""
+Парсер кладовых Эталон с подсчетом количества
+"""
+import sys
+import random
+import re
+from collections import defaultdict
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
+
+# Список User-Agent для ротации
+USER_AGENTS = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15',
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0'
+]
+
+def parse_etalon_kladovye():
+    """Парсит страницу с кладовыми Эталон и подсчитывает количество по проектам"""
+    url = 'https://etalongroup.ru/spb/choose/storage/'
+
+    try:
+        user_agent = random.choice(USER_AGENTS)
+
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            context = browser.new_context(user_agent=user_agent)
+            page = context.new_page()
+
+            # Переходим на страницу
+            response = page.goto(url, wait_until='networkidle', timeout=30000)
+
+            if response.status != 200:
+                print(f'Ошибка: HTTP {response.status}', file=sys.stderr)
+                return []
+
+            # Случайная задержка 2-5 секунд
+            page.wait_for_timeout(random.randint(2000, 5000))
+
+            # Кликаем на все кнопки "Показать еще" для загрузки всех кладовых
+            clicks = 0
+            max_clicks = 30
+
+            while clicks < max_clicks:
+                buttons = page.query_selector_all('button, a')
+                show_more = None
+
+                for btn in buttons:
+                    try:
+                        text = btn.inner_text()
+                        if 'Показать еще' in text or 'показать еще' in text.lower():
+                            show_more = btn
+                            break
+                    except:
+                        pass
+
+                if not show_more:
+                    break
+
+                try:
+                    show_more.scroll_into_view_if_needed()
+                    page.wait_for_timeout(500)
+                    show_more.click()
+                    clicks += 1
+                    page.wait_for_timeout(random.randint(1000, 2000))
+                except:
+                    break
+
+            # Получаем весь текст страницы
+            body_text = page.inner_text('body')
+
+            # Известные проекты из каталога
+            known_projects = [
+                'ЛДМ', 'Domino', 'Новоорловский', 'Пулковский дом',
+                'Ласточкино гнездо', 'Царская столица', 'Московские ворота',
+                'Ягодное Река Парк', 'Клюква.Парк', 'Квартал «Галактика»', 'Монография'
+            ]
+
+            # Подсчитываем кладовые для каждого проекта
+            project_counts = {}
+            current_project = None
+
+            lines = body_text.split('\n')
+
+            for line in lines:
+                line = line.strip()
+
+                # Проверяем название проекта
+                for proj in known_projects:
+                    if line == proj:
+                        current_project = proj
+                        if current_project not in project_counts:
+                            project_counts[current_project] = 0
+                        break
+
+                # Считаем кладовые для текущего проекта
+                if current_project and re.match(r'Кладовая\s+№', line):
+                    project_counts[current_project] += 1
+
+            # Формируем результат
+            projects = []
+
+            for project_name, quantity in project_counts.items():
+                if quantity > 0:  # Только проекты с кладовыми
+                    # Формируем URL проекта
+                    # Преобразуем название в slug (упрощенно)
+                    slug_map = {
+                        'ЛДМ': 'ldm',
+                        'Domino': 'domino',
+                        'Новоорловский': 'novoorlovsky',
+                        'Пулковский дом': 'pulkovskiy-dom',
+                        'Ласточкино гнездо': 'lastochkino-gnezdo',
+                        'Царская столица': 'tsarskaya-stolitsa',
+                        'Московские ворота': 'moskovskie-vorota',
+                        'Ягодное Река Парк': 'yagodnoe-reka-park',
+                        'Клюква.Парк': 'klyukva_park',
+                        'Квартал «Галактика»': 'kvartal-galaktika',
+                        'Монография': 'monografiya'
+                    }
+
+                    slug = slug_map.get(project_name, project_name.lower())
+                    project_url = f'https://etalongroup.ru/spb/object/{slug}/'
+
+                    projects.append({
+                        'name': project_name,
+                        'url': project_url,
+                        'quantity': quantity
+                    })
+
+            browser.close()
+
+            return projects
+
+    except PlaywrightTimeoutError:
+        print('Ошибка: Таймаут при загрузке страницы', file=sys.stderr)
+        return []
+    except Exception as e:
+        print(f'Ошибка парсинга: {e}', file=sys.stderr)
+        return []
+
+if __name__ == '__main__':
+    projects = parse_etalon_kladovye()
+
+    if projects:
+        print(f'Найдено проектов: {len(projects)}')
+        total_qty = sum(p['quantity'] for p in projects)
+        print(f'Всего кладовых: {total_qty}')
+        for p in projects:
+            print(f"  - {p['name']}: {p['quantity']} шт")
+            print(f"    URL: {p['url']}")
+    else:
+        print('Проекты не найдены')
