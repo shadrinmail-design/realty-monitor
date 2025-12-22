@@ -18,6 +18,13 @@ PARSERS = {
         'parser_module': 'parsers.akvilon_parser',
         'parser_function': 'parse_akvilon_kladovye'
     },
+    'akvilon_parking': {
+        'enabled': True,
+        'url': 'https://group-akvilon.ru/novostroyki/parkingi/',
+        'name': 'Аквилон - Парковки',
+        'parser_module': 'parsers.akvilon_parking_parser',
+        'parser_function': 'parse_akvilon_parking'
+    },
     'etalon_kladovye': {
         'enabled': True,
         'url': 'https://etalongroup.ru/spb/choose/storage/',
@@ -40,12 +47,61 @@ PARSERS = {
         'parser_function': 'parse_trest_kladovye'
     },
     'pik_kladovye': {
+    'pik_parking': {
         'enabled': True,
+        'url': 'https://www.pik.ru/search/spb/cars',
+        'name': 'ПИК - Парковки',
+        'parser_module': 'parsers.pik_parking_parser',
+        'parser_function': 'parse_pik_parking'
+    },
+        'enabled': True,
+    'pik_parking': {
+        'enabled': True,
+        'url': 'https://www.pik.ru/search/spb/cars',
+        'name': 'ПИК - Парковки',
+        'parser_module': 'parsers.pik_parking_parser',
+        'parser_function': 'parse_pik_parking'
+    },
         'url': 'https://www.pik.ru/search/spb/storehouse',
+    'pik_parking': {
+        'enabled': True,
+        'url': 'https://www.pik.ru/search/spb/cars',
+        'name': 'ПИК - Парковки',
+        'parser_module': 'parsers.pik_parking_parser',
+        'parser_function': 'parse_pik_parking'
+    },
         'name': 'ПИК - Кладовые',
+    'pik_parking': {
+        'enabled': True,
+        'url': 'https://www.pik.ru/search/spb/cars',
+        'name': 'ПИК - Парковки',
+        'parser_module': 'parsers.pik_parking_parser',
+        'parser_function': 'parse_pik_parking'
+    },
         'parser_module': 'parsers.pik_parser',
+    'pik_parking': {
+        'enabled': True,
+        'url': 'https://www.pik.ru/search/spb/cars',
+        'name': 'ПИК - Парковки',
+        'parser_module': 'parsers.pik_parking_parser',
+        'parser_function': 'parse_pik_parking'
+    },
         'parser_function': 'parse_pik_kladovye'
+    'pik_parking': {
+        'enabled': True,
+        'url': 'https://www.pik.ru/search/spb/cars',
+        'name': 'ПИК - Парковки',
+        'parser_module': 'parsers.pik_parking_parser',
+        'parser_function': 'parse_pik_parking'
+    },
     }
+    'pik_parking': {
+        'enabled': True,
+        'url': 'https://www.pik.ru/search/spb/cars',
+        'name': 'ПИК - Парковки',
+        'parser_module': 'parsers.pik_parking_parser',
+        'parser_function': 'parse_pik_parking'
+    },
 }
 
 # Расписание (для справки, используется cron)

@@ -12,6 +12,7 @@ sys.path.insert(0, '/root/realty-monitor')
 
 from storage import Storage
 from parsers.pik_parser import parse_pik_kladovye
+from parsers.pik_parking_parser import parse_pik_parking
 from notifier import TelegramNotifier
 from history import HistoryStorage
 from analytics import Analytics
@@ -19,6 +20,7 @@ import config
 from parsers.akvilon_parser import parse_akvilon_kladovye
 from parsers.etalon_parser import parse_etalon_kladovye
 from parsers.etalon_parking_parser import parse_etalon_parking
+from parsers.akvilon_parking_parser import parse_akvilon_parking
 from parsers.trest_parser import parse_trest_kladovye
 
 # Настройка логирования
@@ -85,12 +87,16 @@ def run_monitoring():
 
             if source_id == 'akvilon_kladovye':
                 current_projects = parse_akvilon_kladovye()
+            elif source_id == 'akvilon_parking':
+                current_projects = parse_akvilon_parking()
             elif source_id == 'etalon_kladovye':
                 current_projects = parse_etalon_kladovye()
             elif source_id == 'etalon_parking':
                 current_projects = parse_etalon_parking()
             elif source_id == 'trest_kladovye':
                 current_projects = parse_trest_kladovye()
+            elif source_id == 'pik_parking':
+                current_projects = parse_pik_parking()
             elif source_id == 'pik_kladovye':
                 current_projects = parse_pik_kladovye()
             else:
@@ -103,7 +109,7 @@ def run_monitoring():
             history.save_snapshot(current_projects)
 
             # Проверяем алерты (только для кладовых, не для парковок)
-            if source_id != 'etalon_parking':
+            if source_id not in ['etalon_parking', 'akvilon_parking', 'pik_parking']:
                 logger.info('Проверка алертов...')
 
                 # Алерт 1: малое количество (умные пороги: 25, 15, 10, 5, 2)
