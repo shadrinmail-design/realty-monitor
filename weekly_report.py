@@ -14,6 +14,7 @@ from parsers.akvilon_parser import parse_akvilon_kladovye
 from parsers.etalon_parser import parse_etalon_kladovye
 from parsers.trest_parser import parse_trest_kladovye
 from parsers.pik_parser import parse_pik_kladovye
+from parsers.pik_parking_parser import parse_pik_parking
 
 # Настройка логирования
 os.makedirs(config.LOGS_DIR, exist_ok=True)
@@ -95,6 +96,8 @@ def send_weekly_report():
                 projects = parse_etalon_kladovye()
             elif source_id == 'trest_kladovye':
                 projects = parse_trest_kladovye()
+        elif source_id == 'pik_parking':
+            current_projects = parse_pik_parking()
             elif source_id == 'pik_kladovye':
                 projects = parse_pik_kladovye()
             else:
