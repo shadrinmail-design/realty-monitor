@@ -34,14 +34,18 @@ def parse_akvilon_kladovye():
         page = context.new_page()
 
         try:
-            # Загружаем страницу
-            page.goto(url, wait_until='domcontentloaded', timeout=30000)
+            # Загружаем страницу с ожиданием полной загрузки сети
+            page.goto(url, wait_until='networkidle', timeout=30000)
 
             # Случайная задержка 2-5 секунд (эмуляция человека)
             page.wait_for_timeout(random.randint(2000, 5000))
 
-            # Ждем появления карточек проектов
-            page.wait_for_selector('[class*="card"]', timeout=10000)
+            # Ждем появления карточек проектов в DOM (не обязательно видимых)
+            # Увеличиваем timeout и меняем state на 'attached'
+            page.wait_for_selector('[class*="card"]', state='attached', timeout=20000)
+
+            # Дополнительное ожидание для JS, который может скрывать/показывать элементы
+            page.wait_for_timeout(2000)
 
             # Извлекаем все карточки
             cards = page.query_selector_all('[class*="card"]')

@@ -142,8 +142,13 @@ def run_monitoring():
                 logger.info('Новых проектов не найдено')
 
             # Сохраняем текущее состояние
-            storage.save_current_state(source_id, current_projects)
-            logger.info(f'Состояние сохранено: {len(current_projects)} проектов')
+            # Защита от ошибок парсинга: не сохраняем пустое состояние если раньше были проекты
+            previous_count = storage.get_project_count(source_id)
+            if len(current_projects) == 0 and previous_count > 0:
+                logger.warning(f'⚠️ Парсер вернул 0 проектов, но раньше было {previous_count}. Пропускаем сохранение для защиты от ошибок парсинга.')
+            else:
+                storage.save_current_state(source_id, current_projects)
+                logger.info(f'Состояние сохранено: {len(current_projects)} проектов')
 
         except Exception as e:
             logger.error(f'Ошибка при обработке {source_name}: {e}', exc_info=True)
